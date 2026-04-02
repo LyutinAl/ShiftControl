@@ -1,0 +1,48 @@
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pycache
+backend/venv/
+backend/.venv/
+*.egg-info/
+dist/
+build/
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+
+# ── Docker volumes (if bind-mounted locally) ─────────────────────────────────
+postgres_data/
+redis_data/
+media_data/
+
+# ── Claude Code ──────────────────────────────────────────────────────────────
+.claude/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.sw?
+
+# ── Advanced / future DevOps setup ───────────────────────────────────────────
+advanced/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
