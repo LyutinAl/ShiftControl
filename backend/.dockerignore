@@ -1,0 +1,8 @@
+venv/
+wheels/
+__pycache__/
+*.pyc
+*.pyo
+.env
+media/
+alembic/versions/__pycache__/
