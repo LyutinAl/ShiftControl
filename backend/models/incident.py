@@ -38,9 +38,7 @@ class Incident(Base):
     priority: Mapped[IncidentPriority] = mapped_column(
         SAEnum(IncidentPriority), nullable=False, default=IncidentPriority.medium
     )
-    status: Mapped[IncidentStatus] = mapped_column(
-        SAEnum(IncidentStatus), nullable=False, default=IncidentStatus.new
-    )
+    status: Mapped[IncidentStatus] = mapped_column(SAEnum(IncidentStatus), nullable=False, default=IncidentStatus.new)
     equipment_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
     resolution: Mapped[str | None] = mapped_column(Text, nullable=True)
 

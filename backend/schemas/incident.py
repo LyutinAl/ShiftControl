@@ -10,11 +10,13 @@ from schemas.user import UserResponse
 
 class ShiftBriefResponse(BaseModel):
     """Краткая информация о смене для вложения в инцидент."""
+
     id: int
     shift_type: str
     started_at: datetime
 
     model_config = {"from_attributes": True}
+
 
 # Переиспользуемый тип: ID сущности — положительное целое или null.
 # Annotated позволяет прикрепить правила валидации к самому типу,
@@ -45,11 +47,13 @@ class IncidentUpdate(BaseModel):
 
 class IncidentStatusUpdate(BaseModel):
     """Отдельная схема для смены статуса — явно выделяем это как особое действие."""
+
     status: IncidentStatus
 
 
 class AssigneeUpdate(BaseModel):
     """Назначение или снятие исполнителя."""
+
     assignee_id: OptionalPositiveId = None
 
 

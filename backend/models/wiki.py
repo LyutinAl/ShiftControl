@@ -10,22 +10,21 @@ from core.database import Base
 
 
 class WikiVisibility(str, enum.Enum):
-    public = "public"           # все могут читать и редактировать
-    restricted = "restricted"   # только пользователи из списка разрешений
-    private = "private"         # только автор (и всегда админ)
+    public = "public"  # все могут читать и редактировать
+    restricted = "restricted"  # только пользователи из списка разрешений
+    private = "private"  # только автор (и всегда админ)
 
 
 class WikiSection(Base):
     """Раздел Wiki. Поддерживает вложенность через self-referential FK."""
+
     __tablename__ = "wiki_sections"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("wiki_sections.id"), nullable=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    parent: Mapped["WikiSection | None"] = relationship(
-        "WikiSection", remote_side="WikiSection.id", lazy="selectin"
-    )
+    parent: Mapped["WikiSection | None"] = relationship("WikiSection", remote_side="WikiSection.id", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"<WikiSection id={self.id} title={self.title!r}>"
@@ -62,6 +61,7 @@ class WikiArticle(Base):
 
 class WikiArticleVersion(Base):
     """Snapshot содержимого статьи при каждом сохранении."""
+
     __tablename__ = "wiki_article_versions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -75,11 +75,10 @@ class WikiArticleVersion(Base):
 
 class WikiArticlePermission(Base):
     """Список пользователей с доступом к статье (используется при visibility=restricted)."""
+
     __tablename__ = "wiki_article_permissions"
 
-    __table_args__ = (
-        UniqueConstraint("article_id", "user_id", name="uq_wiki_permission"),
-    )
+    __table_args__ = (UniqueConstraint("article_id", "user_id", name="uq_wiki_permission"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     article_id: Mapped[int] = mapped_column(ForeignKey("wiki_articles.id", ondelete="CASCADE"), nullable=False)

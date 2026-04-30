@@ -2,6 +2,7 @@
 Одноразовый скрипт для создания первого администратора.
 Запуск: python create_admin.py
 """
+
 import asyncio
 import selectors
 

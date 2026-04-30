@@ -64,6 +64,7 @@ class WikiArticleResponse(BaseModel):
 
 class WikiArticleListItem(BaseModel):
     """Краткая карточка для списка статей — без тяжёлого content."""
+
     id: int
     title: str
     section_id: int | None

@@ -4,7 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from core.config import settings
 from core import audit_listeners  # noqa: F401 — импорт регистрирует event listeners
 from middleware.audit_middleware import AuditMiddleware
 from routers import auth, shifts, incidents, comments, messages, audit, users, wiki, search

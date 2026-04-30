@@ -3,7 +3,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 from core.config import settings
 
-
 # Движок — соединение с БД. echo=True выводит SQL-запросы в консоль (удобно при разработке)
 engine = create_async_engine(settings.DATABASE_URL, echo=True)
 
@@ -18,6 +17,7 @@ class Base(DeclarativeBase):
     Все модели наследуются от Base — SQLAlchemy знает о них при создании таблиц.
     Аналог @Entity в JPA.
     """
+
     pass
 
 

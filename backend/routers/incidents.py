@@ -21,12 +21,12 @@ router = APIRouter(prefix="/incidents", tags=["incidents"])
 
 # Допустимые переходы статусов: из какого → в какие можно перейти
 ALLOWED_TRANSITIONS: dict[IncidentStatus, set[IncidentStatus]] = {
-    IncidentStatus.new:         {IncidentStatus.in_progress, IncidentStatus.rejected},
+    IncidentStatus.new: {IncidentStatus.in_progress, IncidentStatus.rejected},
     IncidentStatus.in_progress: {IncidentStatus.waiting, IncidentStatus.resolved, IncidentStatus.rejected},
-    IncidentStatus.waiting:     {IncidentStatus.in_progress, IncidentStatus.rejected},
-    IncidentStatus.resolved:    {IncidentStatus.closed, IncidentStatus.in_progress},
-    IncidentStatus.closed:      set(),  # терминальный статус
-    IncidentStatus.rejected:    set(),  # терминальный статус
+    IncidentStatus.waiting: {IncidentStatus.in_progress, IncidentStatus.rejected},
+    IncidentStatus.resolved: {IncidentStatus.closed, IncidentStatus.in_progress},
+    IncidentStatus.closed: set(),  # терминальный статус
+    IncidentStatus.rejected: set(),  # терминальный статус
 }
 
 TERMINAL_STATUSES = {IncidentStatus.closed, IncidentStatus.rejected}
@@ -38,8 +38,7 @@ def _check_transition(current: IncidentStatus, target: IncidentStatus) -> None:
         allowed = ", ".join(s.value for s in ALLOWED_TRANSITIONS[current]) or "нет"
         raise HTTPException(
             status_code=409,
-            detail=f"Переход из '{current.value}' в '{target.value}' недопустим. "
-                   f"Разрешены: {allowed}",
+            detail=f"Переход из '{current.value}' в '{target.value}' недопустим. " f"Разрешены: {allowed}",
         )
 
 
@@ -50,15 +49,12 @@ def _require_not_terminal(incident: Incident) -> None:
 
 def _require_edit_permission(incident: Incident, user: User) -> None:
     """Редактировать может автор, назначенный исполнитель или администратор."""
-    if (
-        user.role != UserRole.admin
-        and incident.author_id != user.id
-        and incident.assignee_id != user.id
-    ):
+    if user.role != UserRole.admin and incident.author_id != user.id and incident.assignee_id != user.id:
         raise HTTPException(status_code=403, detail="Недостаточно прав")
 
 
 # --- Эндпоинты ---
+
 
 @router.get("/", response_model=list[IncidentResponse])
 async def list_incidents(

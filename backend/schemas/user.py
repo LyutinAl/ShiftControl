@@ -5,6 +5,7 @@ from models.user import UserRole
 
 class LoginRequest(BaseModel):
     """Тело запроса для POST /auth/login."""
+
     username: str
     password: str
 
@@ -38,6 +39,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     """Что возвращаем клиенту — никогда не включаем password_hash."""
+
     id: int
     username: str
     full_name: str

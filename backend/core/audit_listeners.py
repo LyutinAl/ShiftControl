@@ -8,19 +8,16 @@ def _serialize(value) -> object:
     """Приводим значения к JSON-сериализуемому виду."""
     if value is None:
         return None
-    if hasattr(value, "isoformat"):   # datetime
+    if hasattr(value, "isoformat"):  # datetime
         return value.isoformat()
-    if hasattr(value, "value"):       # Enum
+    if hasattr(value, "value"):  # Enum
         return value.value
     return value
 
 
 def _instance_dict(instance) -> dict:
     """Все колонки объекта в виде словаря."""
-    return {
-        c.key: _serialize(getattr(instance, c.key))
-        for c in sa_inspect(instance).mapper.column_attrs
-    }
+    return {c.key: _serialize(getattr(instance, c.key)) for c in sa_inspect(instance).mapper.column_attrs}
 
 
 def _get_changes(instance) -> tuple[dict, dict]:
@@ -49,15 +46,17 @@ def capture_changes(session, flush_context, instances):
         if getattr(obj.__class__, "__audit_skip__", False):
             continue
         # entity_id пока неизвестен — запомним ссылку на объект
-        session._audit_queue.append({
-            "user_id": user_id,
-            "action": "create",
-            "entity_type": obj.__tablename__,
-            "obj_ref": obj,      # после flush у него появится id
-            "entity_id": None,
-            "old_value": None,
-            "new_value": None,   # заполним после flush
-        })
+        session._audit_queue.append(
+            {
+                "user_id": user_id,
+                "action": "create",
+                "entity_type": obj.__tablename__,
+                "obj_ref": obj,  # после flush у него появится id
+                "entity_id": None,
+                "old_value": None,
+                "new_value": None,  # заполним после flush
+            }
+        )
 
     for obj in session.dirty:
         if getattr(obj.__class__, "__audit_skip__", False):
@@ -67,28 +66,32 @@ def capture_changes(session, flush_context, instances):
         old, new = _get_changes(obj)
         if not old:
             continue
-        session._audit_queue.append({
-            "user_id": user_id,
-            "action": "update",
-            "entity_type": obj.__tablename__,
-            "obj_ref": None,
-            "entity_id": obj.id,
-            "old_value": old,
-            "new_value": new,
-        })
+        session._audit_queue.append(
+            {
+                "user_id": user_id,
+                "action": "update",
+                "entity_type": obj.__tablename__,
+                "obj_ref": None,
+                "entity_id": obj.id,
+                "old_value": old,
+                "new_value": new,
+            }
+        )
 
     for obj in session.deleted:
         if getattr(obj.__class__, "__audit_skip__", False):
             continue
-        session._audit_queue.append({
-            "user_id": user_id,
-            "action": "delete",
-            "entity_type": obj.__tablename__,
-            "obj_ref": None,
-            "entity_id": obj.id,
-            "old_value": _instance_dict(obj),
-            "new_value": None,
-        })
+        session._audit_queue.append(
+            {
+                "user_id": user_id,
+                "action": "delete",
+                "entity_type": obj.__tablename__,
+                "obj_ref": None,
+                "entity_id": obj.id,
+                "old_value": _instance_dict(obj),
+                "new_value": None,
+            }
+        )
 
 
 @event.listens_for(Session, "after_flush_postexec")
@@ -111,11 +114,13 @@ def write_audit_entries(session, flush_context):
         entity_id = obj_ref.id if obj_ref is not None else entry["entity_id"]
         new_value = _instance_dict(obj_ref) if obj_ref is not None else entry["new_value"]
 
-        session.add(AuditLog(
-            user_id=entry["user_id"],
-            action_type=ActionType(entry["action"]),
-            entity_type=entry["entity_type"],
-            entity_id=entity_id,
-            old_value=entry["old_value"],
-            new_value=new_value,
-        ))
+        session.add(
+            AuditLog(
+                user_id=entry["user_id"],
+                action_type=ActionType(entry["action"]),
+                entity_type=entry["entity_type"],
+                entity_id=entity_id,
+                old_value=entry["old_value"],
+                new_value=new_value,
+            )
+        )

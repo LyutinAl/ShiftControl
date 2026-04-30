@@ -16,6 +16,7 @@ COOKIE_NAME = "session_id"
 
 # --- Dependency: получить текущего пользователя из cookie ---
 
+
 async def get_current_user(
     session_id: str | None = Cookie(default=None, alias=COOKIE_NAME),
     db: AsyncSession = Depends(get_db),
@@ -44,6 +45,7 @@ async def get_current_user(
 
 
 # --- Эндпоинты ---
+
 
 @router.post("/login")
 async def login(

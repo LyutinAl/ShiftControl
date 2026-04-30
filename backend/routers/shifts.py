@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
@@ -27,6 +27,7 @@ def _require_author_or_admin(shift: Shift, user: User) -> None:
 
 # --- Эндпоинты ---
 
+
 @router.get("/", response_model=list[ShiftResponse])
 async def list_shifts(
     skip: int = 0,
@@ -35,9 +36,7 @@ async def list_shifts(
     current_user: User = Depends(get_current_user),
 ):
     """Список смен, новые первыми. Поддерживает пагинацию через skip/limit."""
-    result = await db.execute(
-        select(Shift).order_by(Shift.started_at.desc()).offset(skip).limit(limit)
-    )
+    result = await db.execute(select(Shift).order_by(Shift.started_at.desc()).offset(skip).limit(limit))
     return result.scalars().all()
 
 
