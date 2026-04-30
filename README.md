@@ -1,5 +1,7 @@
 # ShiftControl
 
+![CI](https://github.com/LyutinAl/ShiftControl/actions/workflows/ci.yml/badge.svg)
+
 Внутренняя веб-система для инженерной команды: ведение журналов смен, учёт инцидентов, внутренние сообщения, wiki и аудит-лог действий.
 
 ## Стек
