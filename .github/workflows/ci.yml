@@ -22,7 +22,7 @@ jobs:
         run: flake8 backend/ --config backend/setup.cfg
 
       - name: black --check
-        run: black --check --line-length 120 backend/
+        run: black --check backend/
 
   test:
     name: Test
