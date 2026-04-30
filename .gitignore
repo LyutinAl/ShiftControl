@@ -43,6 +43,9 @@ media_data/
 # ── Advanced / future DevOps setup ───────────────────────────────────────────
 advanced/
 
+# ── University lab assignments (separate repos) ───────────────────────────────
+Lab_*/
+
 # ── OS ────────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
