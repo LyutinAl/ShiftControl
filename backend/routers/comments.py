@@ -45,6 +45,7 @@ async def _add_comment(
 
 # --- Комментарии к сменам ---
 
+
 @router.get("/shifts/{shift_id}/comments", response_model=list[CommentResponse])
 async def list_shift_comments(
     shift_id: int,
@@ -72,6 +73,7 @@ async def add_shift_comment(
 
 # --- Комментарии к инцидентам ---
 
+
 @router.get("/incidents/{incident_id}/comments", response_model=list[CommentResponse])
 async def list_incident_comments(
     incident_id: int,
@@ -98,6 +100,7 @@ async def add_incident_comment(
 
 
 # --- Удаление ---
+
 
 @router.delete("/comments/{comment_id}", status_code=204)
 async def delete_comment(

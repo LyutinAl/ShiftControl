@@ -10,6 +10,7 @@ from core.database import Base
 
 class UserRole(str, enum.Enum):
     """Роли пользователей системы."""
+
     admin = "admin"
     engineer = "engineer"
     manager = "manager"

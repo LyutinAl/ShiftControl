@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     Pydantic проверяет типы и наличие обязательных переменных при старте.
     Если переменная отсутствует — приложение упадёт с понятной ошибкой.
     """
+
     model_config = SettingsConfigDict(
         env_file=str(ENV_FILE),
         env_file_encoding="utf-8",

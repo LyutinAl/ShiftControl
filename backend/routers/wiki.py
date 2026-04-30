@@ -13,8 +13,13 @@ from models.user import User, UserRole
 from models.wiki import WikiArticle, WikiArticlePermission, WikiArticleVersion, WikiSection, WikiVisibility
 from routers.auth import get_current_user
 from schemas.wiki import (
-    WikiArticleCreate, WikiArticleUpdate, WikiArticleResponse, WikiArticleListItem,
-    WikiSectionCreate, WikiSectionResponse, WikiVersionResponse,
+    WikiArticleCreate,
+    WikiArticleUpdate,
+    WikiArticleResponse,
+    WikiArticleListItem,
+    WikiSectionCreate,
+    WikiSectionResponse,
+    WikiVersionResponse,
 )
 
 router = APIRouter(prefix="/wiki", tags=["wiki"])
@@ -25,6 +30,7 @@ MAX_SIZE_BYTES = 500 * 1024  # 500 KB
 
 
 # ── Вспомогательные функции прав доступа ──────────────────────────────────────
+
 
 def _allowed_user_ids(article: WikiArticle) -> set[int]:
     return {p.user_id for p in article.permissions}
@@ -65,6 +71,7 @@ def _require_edit(article: WikiArticle, user: User) -> None:
 
 # ── Разделы ───────────────────────────────────────────────────────────────────
 
+
 @router.get("/sections", response_model=list[WikiSectionResponse])
 async def list_sections(
     db: AsyncSession = Depends(get_db),
@@ -88,6 +95,7 @@ async def create_section(
 
 
 # ── Статьи: список и создание ─────────────────────────────────────────────────
+
 
 @router.get("/articles", response_model=list[WikiArticleListItem])
 async def list_articles(
@@ -145,6 +153,7 @@ async def create_article(
 
 # ── Статьи: чтение, обновление, удаление ──────────────────────────────────────
 
+
 @router.get("/articles/{article_id}", response_model=WikiArticleResponse)
 async def get_article(
     article_id: int,
@@ -172,11 +181,13 @@ async def update_article(
 
     # Если меняется контент — сохраняем текущую версию перед изменением
     if data.content is not None and data.content != article.content:
-        db.add(WikiArticleVersion(
-            article_id=article.id,
-            author_id=current_user.id,
-            content=article.content,
-        ))
+        db.add(
+            WikiArticleVersion(
+                article_id=article.id,
+                author_id=current_user.id,
+                content=article.content,
+            )
+        )
 
     for field in ("title", "content", "section_id", "tags", "visibility"):
         value = getattr(data, field)
@@ -216,6 +227,7 @@ async def delete_article(
 
 
 # ── Версии ────────────────────────────────────────────────────────────────────
+
 
 @router.get("/articles/{article_id}/versions", response_model=list[WikiVersionResponse])
 async def list_versions(
@@ -269,11 +281,13 @@ async def restore_version(
         raise HTTPException(status_code=404, detail="Версия не найдена")
 
     # Сохраняем текущее состояние перед откатом
-    db.add(WikiArticleVersion(
-        article_id=article.id,
-        author_id=current_user.id,
-        content=article.content,
-    ))
+    db.add(
+        WikiArticleVersion(
+            article_id=article.id,
+            author_id=current_user.id,
+            content=article.content,
+        )
+    )
 
     article.content = version.content
     await db.commit()
@@ -282,6 +296,7 @@ async def restore_version(
 
 
 # ── Загрузка изображений ──────────────────────────────────────────────────────
+
 
 @router.post("/images")
 async def upload_image(

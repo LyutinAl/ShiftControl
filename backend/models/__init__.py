@@ -8,12 +8,22 @@ from models.audit_log import AuditLog, ActionType
 from models.wiki import WikiSection, WikiArticle, WikiArticleVersion, WikiArticlePermission, WikiVisibility
 
 __all__ = [
-    "User", "UserRole",
+    "User",
+    "UserRole",
     "Session",
-    "Shift", "ShiftType",
-    "Incident", "IncidentStatus", "IncidentPriority",
-    "Comment", "EntityType",
+    "Shift",
+    "ShiftType",
+    "Incident",
+    "IncidentStatus",
+    "IncidentPriority",
+    "Comment",
+    "EntityType",
     "Message",
-    "AuditLog", "ActionType",
-    "WikiSection", "WikiArticle", "WikiArticleVersion", "WikiArticlePermission", "WikiVisibility",
+    "AuditLog",
+    "ActionType",
+    "WikiSection",
+    "WikiArticle",
+    "WikiArticleVersion",
+    "WikiArticlePermission",
+    "WikiVisibility",
 ]
