@@ -11,6 +11,8 @@
 | Backend | FastAPI + SQLAlchemy (async) + Alembic |
 | База данных | PostgreSQL 16 |
 | Frontend | React + TypeScript + Vite |
+| Контейнеризация | Docker + Docker Compose |
+| CI/CD | GitHub Actions → GHCR |
 
 ## Функциональность
 
@@ -21,18 +23,38 @@
 - **Пользователи** — управление учётными записями, роли (admin / user)
 - **Аудит-лог** — автоматическая запись всех изменений данных
 
-## Требования
+## Быстрый старт (Docker)
 
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 16
+Требования: Docker Engine 24+ и Docker Compose v2.
 
-## Быстрый старт
+```bash
+git clone https://github.com/LyutinAl/ShiftControl.git
+cd ShiftControl
+cp .env.example .env
+```
+
+Отредактировать `.env` (минимум — задать пароли):
+
+```env
+POSTGRES_PASSWORD=your_password
+SECRET_KEY=your_long_random_secret
+```
+
+```bash
+docker compose up -d
+docker compose exec backend python create_admin.py
+```
+
+Приложение доступно на [http://localhost](http://localhost).
+
+## Быстрый старт (локальная разработка)
+
+Требования: Python 3.14+, Node.js 20+, PostgreSQL 16.
 
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/LyutinAl/ShiftControl.git
 cd ShiftControl
 ```
 
@@ -64,16 +86,11 @@ python -m venv venv && source venv/bin/activate
 
 pip install -r requirements.txt
 alembic upgrade head
+python create_admin.py
 uvicorn main:app --reload
 ```
 
-### 4. Создать первого администратора
-
-```bash
-python create_admin.py
-```
-
-### 5. Запустить frontend
+### 4. Запустить frontend
 
 ```bash
 cd frontend
@@ -81,7 +98,7 @@ npm install
 npm run dev
 ```
 
-### 6. Открыть в браузере
+### 5. Открыть в браузере
 
 | URL | Описание |
 | --- | --- |
@@ -99,9 +116,29 @@ ShiftControl/
 │   ├── models/           # SQLAlchemy модели
 │   ├── routers/          # FastAPI роутеры
 │   ├── schemas/          # Pydantic схемы
+│   ├── tests/            # Unit-тесты (pytest)
+│   ├── Dockerfile        # Multi-stage образ backend
 │   └── main.py
-└── frontend/             # React + Vite SPA
+├── frontend/
+│   ├── src/              # React + TypeScript
+│   ├── Dockerfile        # Multi-stage образ frontend (node → nginx)
+│   └── nginx.conf        # Nginx: статика + API proxy
+├── docker-compose.yml    # Оркестрация: frontend, backend, db, cache
+└── .github/
+    └── workflows/
+        └── ci.yml        # Lint + Test + Security + Build & Push
 ```
+
+## CI/CD
+
+Пайплайн запускается автоматически:
+
+| Триггер | Jobs |
+| --- | --- |
+| Pull Request → main | Lint, Test, Security Scan |
+| Push → main | Lint, Test, Security Scan, Build & Push Image |
+
+Образ публикуется в GHCR: `ghcr.io/lyutinal/shiftcontrol:latest`
 
 ## Переменные окружения
 
@@ -110,5 +147,5 @@ ShiftControl/
 | `POSTGRES_DB` | Имя базы данных |
 | `POSTGRES_USER` | Пользователь PostgreSQL |
 | `POSTGRES_PASSWORD` | Пароль PostgreSQL |
-| `DATABASE_URL` | Полный URL подключения к БД |
+| `DATABASE_URL` | Полный URL подключения к БД (только для локального запуска) |
 | `SECRET_KEY` | Секрет для подписи сессий |
