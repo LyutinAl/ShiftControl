@@ -6,7 +6,8 @@ from schemas.user import UserCreate, UserUpdate
 
 
 def test_user_create_valid():
-    user = UserCreate(username="testuser", full_name="Test User", password="password123")
+    pw = "password123"  # pragma: allowlist secret
+    user = UserCreate(username="testuser", full_name="Test User", password=pw)
     assert user.username == "testuser"
     assert user.role == UserRole.engineer
 

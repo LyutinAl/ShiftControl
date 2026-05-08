@@ -7,10 +7,10 @@ def test_hash_password_returns_argon2_hash():
 
 
 def test_verify_password_correct():
-    password = "correctpassword"
+    password = "correctpassword"  # pragma: allowlist secret
     assert verify_password(password, hash_password(password)) is True
 
 
 def test_verify_password_incorrect():
-    hashed = hash_password("correctpassword")
+    hashed = hash_password("correctpassword")  # pragma: allowlist secret
     assert verify_password("wrongpassword", hashed) is False
