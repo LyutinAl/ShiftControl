@@ -6,6 +6,9 @@ on:
   push:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   lint:
     name: Lint
@@ -16,6 +19,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-lint-
 
       - name: Install linters
         run: pip install flake8==7.1.1 black==24.10.0
@@ -39,6 +49,13 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: pip install -r backend/requirements.txt pytest
 
@@ -46,8 +63,8 @@ jobs:
         working-directory: backend
         run: pytest tests/ -v
 
-  security:
-    name: Security Scan
+  security-sast:
+    name: Security / SAST (Bandit)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,15 +73,85 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-bandit
+          restore-keys: ${{ runner.os }}-pip-
+
       - name: Install bandit
         run: pip install bandit==1.8.3
 
       - name: Run bandit
-        run: bandit -r backend/ -x backend/venv,backend/tests -ll
+        run: bandit -r backend/ -x backend/venv,backend/tests -ll -f json -o bandit-report.json
 
-  publish:
-    name: Build & Push Image
-    needs: [lint, test, security]
+      - name: Upload Bandit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  security-sca-python:
+    name: Security / SCA Python (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-audit
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Scan Python dependencies
+        run: pip-audit -r backend/requirements.txt
+
+  security-sca-frontend:
+    name: Security / SCA Frontend (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Cache npm
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [security-sast, security-sca-python, security-sca-frontend]
+    steps:
+      - name: All security checks passed
+        run: echo "Security gate passed — SAST and SCA checks are clean"
+
+  publish-backend:
+    name: Publish Backend
+    needs: [lint, test, security-gate]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -84,6 +171,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -93,6 +183,33 @@ jobs:
           tags: |
             ${{ steps.image.outputs.name }}:latest
             ${{ steps.image.outputs.name }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ steps.image.outputs.name }}:cache
+          cache-to: type=registry,ref=${{ steps.image.outputs.name }}:cache,mode=max
+
+  publish-frontend:
+    name: Publish Frontend
+    needs: [lint, test, security-gate]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set lowercase image name
+        id: image
+        run: echo "name=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/shiftcontrol" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
@@ -103,3 +220,5 @@ jobs:
           tags: |
             ${{ steps.image.outputs.name }}-frontend:latest
             ${{ steps.image.outputs.name }}-frontend:${{ github.sha }}
+          cache-from: type=registry,ref=${{ steps.image.outputs.name }}-frontend:cache
+          cache-to: type=registry,ref=${{ steps.image.outputs.name }}-frontend:cache,mode=max
