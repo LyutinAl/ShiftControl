@@ -362,7 +362,7 @@ export default function WikiArticlePage() {
                     <span className="text-xs text-muted-foreground shrink-0 italic">
                       {article?.author.full_name} (автор)
                     </span>
-                    {allUsers.filter((u) => u.id !== article?.author_id && u.is_active).map((u) => {
+                    {allUsers.filter((u) => u.id !== article?.author.id && u.is_active).map((u) => {
                       const checked = allowedUserIds.includes(u.id)
                       return (
                         <button
