@@ -5,5 +5,5 @@ psycopg[binary]==3.3.3
 alembic==1.18.4
 pydantic-settings==2.13.1
 pwdlib[argon2]==0.3.0
-python-multipart==0.0.22
-pillow==12.1.1
+python-multipart==0.0.27
+pillow==12.2.0
