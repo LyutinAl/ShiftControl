@@ -113,6 +113,17 @@ jobs:
           key: ${{ runner.os }}-pip-audit
           restore-keys: ${{ runner.os }}-pip-
 
+      - name: Get date for pip-audit cache key
+        id: date
+        run: echo "today=$(date +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Cache pip-audit vulnerability DB
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip-audit
+          key: ${{ runner.os }}-pip-audit-db-${{ steps.date.outputs.today }}
+          restore-keys: ${{ runner.os }}-pip-audit-db-
+
       - name: Install pip-audit
         run: pip install pip-audit
 
