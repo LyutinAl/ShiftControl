@@ -43,11 +43,11 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt pytest
+        run: pip install -r backend/requirements.txt pytest httpx
 
       - name: Run tests
         working-directory: backend
-        run: pytest tests/unit/ -v
+        run: pytest tests/ -v
 
   security:
     name: Security Scan
