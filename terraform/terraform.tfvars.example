@@ -1,0 +1,16 @@
+backend_image    = "ghcr.io/lyutinal/shiftcontrol:latest"
+frontend_image   = "ghcr.io/lyutinal/shiftcontrol-frontend:latest"
+postgres_version = "16-alpine"
+redis_version    = "7-alpine"
+frontend_port    = 8080
+postgres_db      = "shiftcontrol"
+postgres_user    = "shiftcontrol"
+
+# Чувствительные переменные — задавать через переменные окружения:
+#   export TF_VAR_postgres_password="your_password"  # pragma: allowlist secret
+#   export TF_VAR_secret_key="your_long_random_secret"  # pragma: allowlist secret
+#
+# Или при запуске:
+#   terraform apply -var="postgres_password=..." -var="secret_key=..."
+postgres_password = "change_me"                          # pragma: allowlist secret
+secret_key        = "change_this_to_a_long_random_secret" # pragma: allowlist secret

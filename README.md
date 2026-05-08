@@ -10,8 +10,10 @@
 | --- | --- |
 | Backend | FastAPI + SQLAlchemy (async) + Alembic |
 | База данных | PostgreSQL 16 |
+| Кэш | Redis 7 |
 | Frontend | React + TypeScript + Vite |
 | Контейнеризация | Docker + Docker Compose |
+| IaC | Terraform (kreuzwerker/docker) |
 | CI/CD | GitHub Actions → GHCR |
 
 ## Функциональность
@@ -45,7 +47,31 @@ docker compose up -d
 docker compose exec backend python create_admin.py
 ```
 
-Приложение доступно на [http://localhost](http://localhost).
+Приложение доступно на <http://localhost>.
+
+> После создания: логин `admin`, пароль `admin123`. Смените пароль после первого входа.
+
+## Быстрый старт (Terraform)
+
+Альтернативный способ развёртывания через IaC. Требования: Terraform >= 1.0, Docker Desktop.
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Заполнить postgres_password и secret_key в terraform.tfvars
+
+terraform init
+terraform apply
+```
+
+```bash
+docker exec shiftcontrol_backend python create_admin.py
+```
+
+Приложение доступно на <http://localhost:8080>.
+
+> Если `registry.terraform.io` недоступен (Россия), настройте зеркало Yandex Cloud —
+> инструкция в разделе [Примечание по Terraform](#примечание-по-terraform).
 
 ## Быстрый старт (локальная разработка)
 
@@ -124,6 +150,12 @@ ShiftControl/
 │   ├── Dockerfile        # Multi-stage образ frontend (node → nginx)
 │   └── nginx.conf        # Nginx: статика + API proxy
 ├── docker-compose.yml    # Оркестрация: frontend, backend, db, cache
+├── terraform/            # IaC: то же окружение через Terraform
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   ├── providers.tf
+│   └── terraform.tfvars.example
 └── .github/
     └── workflows/
         └── ci.yml        # Lint + Test + Security + Build & Push
@@ -138,7 +170,12 @@ ShiftControl/
 | Pull Request → main | Lint, Test, Security Scan |
 | Push → main | Lint, Test, Security Scan, Build & Push Image |
 
-Образ публикуется в GHCR: `ghcr.io/lyutinal/shiftcontrol:latest`
+Образы публикуются в GHCR:
+
+| Образ | Описание |
+| --- | --- |
+| `ghcr.io/lyutinal/shiftcontrol:latest` | Backend (FastAPI) |
+| `ghcr.io/lyutinal/shiftcontrol-frontend:latest` | Frontend (nginx + React SPA) |
 
 ## Переменные окружения
 
@@ -149,3 +186,19 @@ ShiftControl/
 | `POSTGRES_PASSWORD` | Пароль PostgreSQL |
 | `DATABASE_URL` | Полный URL подключения к БД (только для локального запуска) |
 | `SECRET_KEY` | Секрет для подписи сессий |
+
+## Примечание по Terraform
+
+Официальный реестр HashiCorp (`registry.terraform.io`) может быть недоступен из России. В этом случае настройте зеркало Yandex Cloud — создайте файл `%APPDATA%\terraform.d\terraform.rc` (Windows) или `~/.terraformrc` (Linux/macOS):
+
+```hcl
+provider_installation {
+  network_mirror {
+    url     = "https://terraform-mirror.yandexcloud.net/"
+    include = ["registry.terraform.io/*/*"]
+  }
+  direct {
+    exclude = ["registry.terraform.io/*/*"]
+  }
+}
+```
