@@ -5,7 +5,7 @@ import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 
 import { listAuditLogs } from '@/api/audit'
-import type { ActionType } from '@/api/audit'
+import type { ActionType, AuditLog } from '@/api/audit'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -47,7 +47,7 @@ function DiffRow({ label, value }: { label: string; value: Record<string, unknow
   )
 }
 
-function ExpandableRow({ log }: { log: ReturnType<typeof listAuditLogs> extends Promise<infer T> ? T[number] : never }) {
+function ExpandableRow({ log }: { log: AuditLog }) {
   const [open, setOpen] = useState(false)
   const hasDiff = log.old_value || log.new_value
 

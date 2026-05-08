@@ -9,7 +9,6 @@ import { ru } from 'date-fns/locale'
 import {
   listIncidents,
   createIncident,
-  TERMINAL_STATUSES,
 } from '@/api/incidents'
 import type { IncidentCreate, IncidentStatus, IncidentPriority } from '@/api/incidents'
 import { listShifts } from '@/api/shifts'
