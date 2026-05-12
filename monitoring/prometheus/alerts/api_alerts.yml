@@ -1,0 +1,66 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Высокий уровень ошибок API"
+          description: >-
+            Уровень 5xx ошибок {{ $value | printf "%.2f" }}%
+            превышает порог 5%
+          runbook_url: "https://github.com/LyutinAl/ShiftControl/wiki/runbooks/high-error-rate"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket[5m])
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Высокая задержка API"
+          description: >-
+            P95 latency {{ $value | printf "%.3f" }}s превышает 500 мс
+          runbook_url: "https://github.com/LyutinAl/ShiftControl/wiki/runbooks/high-latency"
+
+      - alert: ServiceDown
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Сервис API недоступен"
+          description: >-
+            Prometheus не может скрейпить метрики
+            с {{ $labels.instance }} более 1 минуты
+          runbook_url: "https://github.com/LyutinAl/ShiftControl/wiki/runbooks/service-down"
+
+      - alert: HighCPUUsage
+        expr: |
+          (
+            1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))
+          ) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          summary: "Высокое использование CPU"
+          description: >-
+            CPU использует {{ $value | printf "%.1f" }}%,
+            порог 80%
+          runbook_url: "https://github.com/LyutinAl/ShiftControl/wiki/runbooks/high-cpu"
