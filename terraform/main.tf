@@ -97,6 +97,11 @@ resource "docker_container" "backend" {
     "SECRET_KEY=${var.secret_key}",
   ]
 
+  ports {
+    internal = 8000
+    external = 8000
+  }
+
   volumes {
     volume_name    = docker_volume.media_data.name
     container_path = "/app/media"
