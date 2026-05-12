@@ -3,16 +3,19 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 
-from core import audit_listeners  # noqa: F401 — импорт регистрирует event listeners
+from core import audit_listeners  # noqa: F401,E501
 from middleware.audit_middleware import AuditMiddleware
-from routers import auth, shifts, incidents, comments, messages, audit, users, wiki, search
+from routers import auth, shifts, incidents, comments, messages, audit, users, wiki, search  # noqa: E501
 
 app = FastAPI(
     title="ShiftControl API",
     description="Система учёта сменных событий и инцидентов",
     version="0.1.0",
 )
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics", tags=["system"])  # noqa: E501
 
 app.add_middleware(AuditMiddleware)
 app.add_middleware(
