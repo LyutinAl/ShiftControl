@@ -1,0 +1,134 @@
+name: Security
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  secret-detection:
+    name: Secret Detection (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: "8.27.2"
+        run: |
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+
+      - name: Detect secrets
+        run: |
+          gitleaks detect \
+            --source . \
+            --config .gitleaks.toml \
+            --report-format json \
+            --report-path gitleaks-report.json \
+            --exit-code 1
+
+      - name: Upload Gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+          if-no-files-found: ignore
+
+  trivy-fs:
+    name: SCA / Filesystem (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan filesystem — block on fixable CRITICAL/HIGH
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ./backend
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Save full JSON report
+        if: always()
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: ./backend
+          format: json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          exit-code: "0"
+          output: trivy-fs-report.json
+
+      - name: Upload FS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-report
+          path: trivy-fs-report.json
+
+  trivy-image:
+    name: Image Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image for scanning
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          load: true
+          tags: shiftcontrol-backend:scan
+          cache-from: type=gha,scope=security-scan
+          cache-to: type=gha,scope=security-scan,mode=max
+
+      - name: Scan image — block on fixable CRITICAL/HIGH
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: shiftcontrol-backend:scan
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Save full JSON report
+        if: always()
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: shiftcontrol-backend:scan
+          format: json
+          severity: CRITICAL,HIGH,MEDIUM,LOW
+          exit-code: "0"
+          output: trivy-image-report.json
+
+      - name: Upload image report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-image-report
+          path: trivy-image-report.json
+
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [secret-detection, trivy-fs, trivy-image]
+    steps:
+      - name: All security checks passed
+        run: echo "Security gate passed — Gitleaks, Trivy FS, and Image Scan are clean"

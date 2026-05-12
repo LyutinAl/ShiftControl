@@ -1,0 +1,19 @@
+title = "ShiftControl Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "ShiftControl project allowlist"
+
+  regexes = [
+    # CI test fixture — fake key, never used in production
+    '''ci_test_secret_key_not_used_in_unit_tests''',
+  ]
+
+  paths = [
+    # Placeholder values only, no real secrets
+    '''\.env\.example$''',
+    # Uses ${VAR} template substitution, not real values
+    '''monitoring/alertmanager/alertmanager\.yml$''',
+  ]
