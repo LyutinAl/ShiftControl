@@ -212,30 +212,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Gitleaks
-        env:
-          GITLEAKS_VERSION: "8.27.2"
-        run: |
-          curl -sSfL \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
-            | tar -xz gitleaks
-          sudo mv gitleaks /usr/local/bin/gitleaks
-
       - name: Detect secrets
-        run: |
-          gitleaks detect \
-            --source . \
-            --config .gitleaks.toml \
-            --report-format json \
-            --report-path gitleaks-report.json \
-            --exit-code 1
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: "false"
 
       - name: Upload Gitleaks report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: gitleaks-report.json
+          path: results.sarif
           if-no-files-found: ignore
 
   trivy-image:
