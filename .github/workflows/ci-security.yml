@@ -121,10 +121,25 @@ jobs:
           name: trivy-image-report
           path: trivy-image-report.json
 
+  sbom-generation:
+    name: SBOM (Syft)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.json
+          upload-artifact: true
+          artifact-name: sbom
+
   security-gate:
     name: Security Gate
     runs-on: ubuntu-latest
-    needs: [secret-detection, trivy-fs, trivy-image]
+    needs: [secret-detection, trivy-fs, trivy-image, sbom-generation]
     steps:
       - name: All security checks passed
-        run: echo "Security gate passed — Gitleaks, Trivy FS, and Image Scan are clean"
+        run: echo "Security gate passed — Gitleaks, Trivy FS, Image Scan, and SBOM are clean"
