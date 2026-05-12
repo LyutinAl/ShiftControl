@@ -54,6 +54,11 @@ resource "docker_container" "db" {
     "POSTGRES_PASSWORD=${var.postgres_password}",
   ]
 
+  log_driver = "json-file"
+  log_opts = {
+    tag = "{{.Name}}"
+  }
+
   volumes {
     volume_name    = docker_volume.postgres_data.name
     container_path = "/var/lib/postgresql/data"
@@ -77,6 +82,11 @@ resource "docker_container" "cache" {
   command = ["redis-server", "--appendonly", "yes"]
   restart = "unless-stopped"
 
+  log_driver = "json-file"
+  log_opts = {
+    tag = "{{.Name}}"
+  }
+
   volumes {
     volume_name    = docker_volume.redis_data.name
     container_path = "/data"
@@ -96,6 +106,11 @@ resource "docker_container" "backend" {
     "DATABASE_URL=postgresql+psycopg://${var.postgres_user}:${var.postgres_password}@${docker_container.db.name}:5432/${var.postgres_db}",
     "SECRET_KEY=${var.secret_key}",
   ]
+
+  log_driver = "json-file"
+  log_opts = {
+    tag = "{{.Name}}"
+  }
 
   ports {
     internal = 8000
@@ -122,6 +137,11 @@ resource "docker_container" "frontend" {
   name    = "shiftcontrol_frontend"
   image   = docker_image.frontend.image_id
   restart = "unless-stopped"
+
+  log_driver = "json-file"
+  log_opts = {
+    tag = "{{.Name}}"
+  }
 
   ports {
     internal = 80
