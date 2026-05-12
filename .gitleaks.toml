@@ -61,6 +61,8 @@ tags = ["jwt", "token", "auth"]
     '''terraform/main\.tf$''',
     # CI test database — ephemeral postgres:postgres on localhost only
     '''\.github/workflows/ci\.yml$''',
+    # DAST job uses same ephemeral postgres credentials for staging scan
+    '''\.github/workflows/ci-security\.yml$''',
     # docker-compose: DB URL uses ${VAR} substitution throughout history
     '''(^|/)docker-compose\.yml$''',
   ]

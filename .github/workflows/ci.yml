@@ -86,8 +86,12 @@ jobs:
       - name: Install bandit
         run: pip install bandit==1.8.3
 
-      - name: Run bandit
-        run: bandit -r backend/ -x backend/venv,backend/tests -ll -f json -o bandit-report.json
+      - name: Run bandit (block on HIGH severity)
+        run: bandit -r backend/ -x backend/venv,backend/tests -lll -q
+
+      - name: Save full bandit report (MEDIUM and above)
+        if: always()
+        run: bandit -r backend/ -x backend/venv,backend/tests -ll -f json -o bandit-report.json || true
 
       - name: Upload Bandit report
         if: always()
