@@ -28,3 +28,11 @@ repos:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
         exclude: package-lock\.json
+
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks (detect secrets)
+        language: system
+        entry: gitleaks detect --source . --config .gitleaks.toml --exit-code 1
+        pass_filenames: false

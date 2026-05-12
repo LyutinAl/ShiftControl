@@ -3,12 +3,46 @@ title = "ShiftControl Gitleaks Configuration"
 [extend]
 useDefault = true
 
+# ── Custom rules ──────────────────────────────────────────────────────────────
+
+[[rules]]
+id = "shiftcontrol-secret-key"
+description = "FastAPI/Django SECRET_KEY hardcoded in source"
+regex = '''(?i)(secret[_-]?key)\s*[=:]\s*["'][A-Za-z0-9!@#$%^&*()\-_+=]{20,}["']'''
+tags = ["fastapi", "secret"]
+
+[[rules]]
+id = "shiftcontrol-db-connection-string"
+description = "Database connection string with embedded credentials"
+regex = '''(postgresql|mysql|mongodb)(\+\w+)?://[^:@\s]+:[^@\s]{4,}@'''
+tags = ["database", "credentials"]
+
+[[rules]]
+id = "shiftcontrol-smtp-password"
+description = "SMTP password hardcoded in source file"
+regex = '''(?i)smtp[_-]?(auth[_-]?)?password\s*[=:]\s*["'][^"'\$]{4,}["']'''
+tags = ["smtp", "email", "secret"]
+
+[[rules]]
+id = "shiftcontrol-jwt-token"
+description = "Hardcoded JWT Bearer token"
+regex = '''(?i)(bearer|authorization)\s*[=:]\s*["']?eyJ[A-Za-z0-9_-]{20,}'''
+tags = ["jwt", "token", "auth"]
+
+# ── Allowlist ─────────────────────────────────────────────────────────────────
+
 [allowlist]
   description = "ShiftControl project allowlist"
 
   regexes = [
-    # CI test fixture — fake key, never used in production
+    # CI test fixture — fake key, clearly labeled as non-production
     '''ci_test_secret_key_not_used_in_unit_tests''',
+    # Terraform variable references — values injected at runtime, not hardcoded
+    '''\$\{var\.[a-z_]+\}''',
+    # CI test database — well-known ephemeral credentials, localhost only
+    '''postgres:postgres@localhost''',
+    # Example placeholder SECRET_KEY in tfvars template
+    '''your-secret-key-here''',
   ]
 
   paths = [
@@ -19,4 +53,16 @@ useDefault = true
     # detect-secrets baseline: stores SHA hashes of reviewed findings,
     # not actual secrets — flagged as generic-api-key by Gitleaks
     '''\.secrets\.baseline$''',
+    # Documentation examples, not operational config
+    '''README\.md$''',
+    # Example tfvars with placeholder values, not committed real secrets
+    '''terraform/terraform.tfvars.example$''',
+    # DB URL built from Terraform variables — no hardcoded credentials
+    '''terraform/main\.tf$''',
+    # CI test database — ephemeral postgres:postgres on localhost only
+    '''\.github/workflows/ci\.yml$''',
+    # DAST job uses same ephemeral postgres credentials for staging scan
+    '''\.github/workflows/ci-security\.yml$''',
+    # docker-compose: DB URL uses ${VAR} substitution throughout history
+    '''(^|/)docker-compose\.yml$''',
   ]
