@@ -1,0 +1,105 @@
+{
+  "title": "Container Logs",
+  "uid": "container-logs",
+  "tags": ["logs", "loki"],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "container",
+        "label": "Container",
+        "type": "query",
+        "datasource": { "type": "loki", "uid": "loki" },
+        "query": "label_values(container)",
+        "refresh": 2,
+        "multi": false,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": "All", "value": "$__all" },
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Log Rate (lines/min)",
+      "type": "timeseries",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "sum by (container) (count_over_time({job=\"container-logs\", container=~\"$container\"}[1m]))",
+          "legendFormat": "{{ container }}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "lineWidth": 1, "fillOpacity": 20 }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (lines/min)",
+      "type": "timeseries",
+      "gridPos": { "h": 5, "w": 24, "x": 0, "y": 5 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "sum by (container) (count_over_time({job=\"container-logs\", container=~\"$container\"} |= \"error\" [1m]))",
+          "legendFormat": "{{ container }} errors",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "fixedColor": "red", "mode": "fixed" },
+          "custom": { "lineWidth": 1, "fillOpacity": 20 }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Logs — $container",
+      "type": "logs",
+      "gridPos": { "h": 16, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "expr": "{job=\"container-logs\", container=~\"$container\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      }
+    }
+  ]
+}
