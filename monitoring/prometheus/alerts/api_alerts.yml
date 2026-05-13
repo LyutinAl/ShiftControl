@@ -6,7 +6,7 @@ groups:
       - alert: HighErrorRate
         expr: |
           (
-            sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+            sum(rate(http_requests_total{status="5xx"}[5m]))
             /
             sum(rate(http_requests_total[5m]))
           ) * 100 > 5
@@ -72,7 +72,7 @@ groups:
       - alert: SuspiciousErrorSpike
         expr: |
           (
-            sum(rate(http_requests_total{status_code=~"5.."}[5m]))
+            sum(rate(http_requests_total{status="5xx"}[5m]))
             /
             sum(rate(http_requests_total[5m]))
           ) * 100 > 10
@@ -105,7 +105,7 @@ groups:
 
       - alert: AuthFailureSpike
         expr: |
-          sum(rate(http_requests_total{status_code="401"}[5m])) > 5
+          sum(rate(http_requests_total{status="4xx"}[5m])) > 5
         for: 3m
         labels:
           severity: warning
